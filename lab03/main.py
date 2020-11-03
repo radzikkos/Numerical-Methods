@@ -27,54 +27,47 @@ class Methods():
         xnPlus1 = xn + deltaT / 2 * (k1x + k2x)
         vnPlus1 = vn + deltaT / 2 * (k1v + k2v)
         return xnPlus1, vnPlus1
+
     def trapezium_method(self, xn, vn, deltaT, alpha):
-        #funkcje pomocnicze
         def f(vn):
             return vn
         def g(xn, vn, alpha):
             return alpha * (1 - math.pow(xn,2)) * vn - xn
+
         def F(xnPlus1, xn, vnPlus1, vn, deltaT):
             return xnPlus1 - xn - deltaT / 2 * (f(vn) + f(vnPlus1))
+
         def G(xnPlus1, xn, vnPlus1, vn, deltaT, alpha):
             return vnPlus1 - vn - deltaT / 2 * (g(xn, vn, alpha) + g(xnPlus1, vnPlus1, alpha))
 
         def a21(deltaT, xnPlus1k, vnPlus1k, alpha):
             return (-1) * deltaT / 2 * ((-2) * alpha * xnPlus1k * vnPlus1k - 1)
-        def a22(deltaT, xnPlus1k, alpha):
-            return 1 - deltaT / 2 * alpha * (1 - math.pow(xnPlus1k , 2))
 
+        def a22(deltaT, xnPlus1k, alpha):
+            return 1 - deltaT / 2 * alpha * (1 - math.pow(xnPlus1k, 2))
         sigma = math.pow(10, -10)
-        a11 = 1
-        a12 = (-1) * deltaT / 2
-        #zmienne pomocnicze
         xnPlus1 = xn
         vnPlus1 = vn
-        xnPlus1k = xn
-        vnPlus1k = vn
-        deltaX = 0.
-        deltaV = 0.
-        #i = 1
+        a11 = 1
+        a12 = -deltaT / 2.0
         while True:
+            FResult = F(xnPlus1, xn, vnPlus1, vn, deltaT)
+            GResult = G(xnPlus1, xn, vnPlus1, vn, deltaT, alpha)
 
-            #print("Utkwilo")
+            A21 = a21(deltaT, xnPlus1, vnPlus1, alpha)
+            A22 = a22(deltaT, xnPlus1, alpha)
 
-            #xnPlus1k = xnPlus1
-            #vnPlus1k = vnPlus1
-            denominator = a11 * a22(deltaT, xnPlus1k, alpha) - a12 * a21(deltaT, xnPlus1k, vnPlus1k, alpha)
-            #Te delty nie zmieniaja sie, nie mam pojecia dlaczego
-            deltaX = ((-1) * F(xnPlus1, xn, vnPlus1, vn, deltaT) * a22(deltaT, xnPlus1k, alpha) + G(xnPlus1, xn, vnPlus1, vn, deltaT, alpha)) / denominator
-            deltaV = (a11 * (-1) * G(xnPlus1, xn, vnPlus1, vn, deltaT, alpha) - a21(deltaT, xnPlus1k, vnPlus1k, alpha) * (-1) * F(xnPlus1, xn, vnPlus1, vn, deltaT)) / denominator
+            denominator = (a11 * A22 - a12 * A21)
 
-            xnPlus1k = xnPlus1k + deltaX
-            vnPlus1k = vnPlus1k + deltaV
-            #print(xnPlus1k, vnPlus1k, denominator, deltaV, deltaX), xnPlus1, vnPlus1
-            #print(deltaX)
+            deltaX = (-FResult * A22 - (-GResult) * a12) / denominator
+            deltaV = (a11 * (-GResult) - A21 * (-FResult)) / denominator
+
+            xnPlus1 += deltaX
+            vnPlus1 += deltaV
+
             if math.fabs(deltaX) < sigma and math.fabs(deltaV) < sigma:
-                xnPlus1 = xnPlus1k
-                vnPlus1 = vnPlus1k
-                break
-        #print(xnPlus1 ,vnPlus1)
-        return xnPlus1, vnPlus1
+                break;
+        return xnPlus1,vnPlus1
 
     #ta funkcja dziala poprawnie
     def time_step(self, deltaT0, x0, v0, tMax,alpha,fun,nameofMethod):
@@ -149,7 +142,7 @@ class Methods():
         plt.plot(dataTOL2[1:, 0], dataTOL2[1:, 3], label="TOL =" + str(math.pow(10, -5)))
         plt.title(nameofMethod)
         plt.xlabel("t")
-        plt.ylabel("x(t)")
+        plt.ylabel("v(t)")
         plt.legend()
         plt.show()
 
@@ -163,6 +156,6 @@ class Methods():
 
 Obj = Methods()
 #Rk2 dziala poprawnie
-#Obj.time_step(deltaT0, x0, v0, tMax, alpha,Obj.rk2_method,"RK2")
-#Funckja ponizej ma nieskonczona petle w funkcji trapezium_metod
-#Obj.time_step(deltaT0, x0, v0, tMax, alpha,Obj.trapezium_method,"Trapezium")
+Obj.time_step(deltaT0, x0, v0, tMax, alpha,Obj.rk2_method,"RK2")
+#Dziala
+Obj.time_step(deltaT0, x0, v0, tMax, alpha,Obj.trapezium_method,"Trapezium")
