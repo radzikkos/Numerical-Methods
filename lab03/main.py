@@ -69,7 +69,7 @@ class Methods():
                 break;
         return xnPlus1,vnPlus1
 
-    #ta funkcja dziala poprawnie
+
     def time_step(self, deltaT0, x0, v0, tMax,alpha,fun,nameofMethod):
         dataTOL1 = data = np.array([[0, 0, 0, 0]])
         dataTOL2 =  np.array([[0, 0, 0, 0]])
@@ -113,15 +113,11 @@ class Methods():
                         dataTOL1 = np.vstack([dataTOL1, np.array([[t, deltaT, xn, vn]])])
                     else:
                         dataTOL2= np.vstack([dataTOL2, np.array([[t, deltaT, xn, vn]])])
-                #deltaT maleje, wiec czas przestaje sie zmieniac dla trapezow. Nie mam pojecia dlaczego tak sie dzieje
+
                 deltaT = math.pow(self.S * tol / maxValue, 1 / (self.p + 1)) * deltaT
                 if t >= tMax:
                     break
-                #j += 1
-                #print(deltaT)
-                #if j > 10000:
-                   # break
-                #print(t , tMax)
+
         plt.plot(dataTOL1[1:, 0], dataTOL1[1:, 1], label="TOL =" + str(math.pow(10,-2)))
         plt.plot(dataTOL2[1:, 0], dataTOL2[1:, 1], label="TOL =" + str(math.pow(10,-5)))
         plt.title(nameofMethod)
