@@ -2,4 +2,4 @@
 out/
 *.class
 *.zip
-idea/
+.idea/
