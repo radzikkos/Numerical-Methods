@@ -47,9 +47,9 @@ class Relaxation:
         return S
 
     def edge_cases(self, v):
-        for j in range(self.ny + 1):
-            v[0,j] = self.v1
-            v[self.nx,j] = self.v2
+        for j in range(self.nx + 1):
+            v[j,0] = self.v1
+            v[j,self.ny] = self.v2
         return v
     def global_relaxation_core(self, omega, vOld, vNew, ro):
         for i in range(1, self.nx):
@@ -64,23 +64,23 @@ class Relaxation:
             for j in range(self.ny + 1):
                 vOld[i,j] = (1 - omega) * vOld[i,j] + omega * vNew[i,j]
 
-        return vNew, vOld
 
-    def err(self, vOld, i, j):
-        ro = self.fill_ro()
+
+    def err(self, vOld, i, j,ro):
+        #ro = self.fill_ro()
         return ( (vOld[i+1,j] - 2*vOld[i,j] + vOld[i-1,j])/(math.pow(self.delta,2)) + (vOld[i,j+1] - 2*vOld[i,j] + vOld[i,j-1])/(math.pow(self.delta,2)) + ro[i,j]/self.epsilon );
 
     def global_relaxation(self):
         vOld = np.zeros((self.nx + 1, self.ny + 1))
         map = np.zeros((1, 3))  # to plot
         error = np.zeros((1, 3))  # to plot
-
+        ro = self.fill_ro()
         for omega in self.omegaG:
             integral = np.zeros((1,2))  # to plot
 
 
             vNew = np.zeros((self.nx + 1, self.ny + 1))
-            ro = self.fill_ro()
+
             vNew = self.edge_cases(vNew)
 
             vOld = np.copy(vNew)
@@ -89,69 +89,69 @@ class Relaxation:
 
             it = 0
             while True:
-                vNew, vOld = self.global_relaxation_core(omega, vOld, vNew, ro)
+                self.global_relaxation_core(omega, vOld, vNew, ro)
                 sIt[0,0] = sIt[0,1]
                 sIt[0,1] = self.stop_condition(vOld, ro)
                 it += 1
+                print(it)
                 integral = np.vstack([integral, np.array([[it, sIt[0,0]]])])
                 #print(integral, math.fabs( (sIt[0,0] - sIt[0,1])/ sIt[0,1]) - self.TOL)
-                if( math.fabs( (sIt[0,0] - sIt[0,1])/ sIt[0,0]) < 0.01 ):
+                if( math.fabs( (sIt[0,0] - sIt[0,1])/ sIt[0,0]) < self.TOL ):
                     break
-            plt.plot(integral[1:,0], integral[1:,1],label=(str)(omega))
+            plt.plot(integral[1:,0], integral[1:,1],label="omega="+(str)(omega))
             #print(vOld)
-        plt.title("Integral")
+        plt.title("Integral for global relaxation")
         plt.xlabel("it")
         plt.ylabel("s(it)")
         plt.legend()
         plt.show()
 
-        for i in range(self.nx + 1):
+        check = 0
+
+        for i in range(self.nx + 1 ):
             for j in range(self.ny + 1):
+                print(check)
+                check += 1
                 map = np.vstack([map, np.array([[self.delta * i, self.delta * j,vOld[i,j]]])])
                 #print(i * j)
                 if (i > 0 and j > 0 and i < self.nx and j < self.ny):
-                    error = np.vstack([error, np.array([[self.delta * i, self.delta * j, self.err(vOld, i, j)]])])
+                    error = np.vstack([error, np.array([[self.delta * i, self.delta * j, self.err(vOld, i, j,ro)]])])
                 else:
                     error = np.vstack([error, np.array([[self.delta * i, self.delta * j, 0.0]])])
-        fig = plt.figure()
-        ax = Axes3D(fig)
-        surf = ax.plot_surface(map[1:,0], map[1:,1], map[1:2], rstride=1, cstride=1, cmap=cm.jet, extend3d=True)
-        ax.set_zlim3d(-1.01, 1.01)
 
-        ax.w_zaxis.set_major_locator(LinearLocator(10))
-        ax.w_zaxis.set_major_formatter(FormatStrFormatter('%.03f'))
+        ax = plt.axes(projection='3d')
 
-        fig.colorbar(surf)
-
+        ax.scatter3D(map[1:,0], map[1:,1], map[1:,2], cmap='viridis', linewidth=0.5)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z');
+        plt.title("Map")
         plt.show()
 
-        fig = plt.figure()
-        ax = Axes3D(fig)
-        surf = ax.plot_surface(error[1:, 0], error[1:, 1], error[1:2], rstride=1, cstride=1, cmap=cm.jet, extend3d=True)
-        ax.set_zlim3d(-1.01, 1.01)
-
-        ax.w_zaxis.set_major_locator(LinearLocator(10))
-        ax.w_zaxis.set_major_formatter(FormatStrFormatter('%.03f'))
-
-        fig.colorbar(surf)
-
+        ax = plt.axes(projection='3d')
+        ax.scatter3D(error[1:, 0], error[1:, 1], error[1:, 2], cmap='viridis', linewidth=0.5)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z');
+        plt.title("Error")
         plt.show()
 
     def local_relaxation_core(self, omega, v, ro):
-        for i in range(self.nx):
-            for j in range(self.ny):
+        for i in range(1,self.nx):
+            for j in range(1,self.ny):
                 v[i,j] = (1 - omega) * v[i,j] + (omega / 4.0) * (v[i + 1,j] + v[i - 1,j] + v[i,j + 1] + v[i,j - 1] + math.pow(self.delta, 2) / self.epsilon * ro[i,j]);
 
-        for j in range(self.ny):
+        for j in range(1,self.ny):
             v[0,j] = v[1,j]
             v[self.nx, j] = v[self.nx - 1, j]
         return v
+    
     def local_relaxation(self):
         for omega in self.omegaL:
             integral = np.zeros((1,2))  # to plot
             sIt = np.zeros((1, 2))
             v = np.zeros((self.nx + 1, self.ny + 1))
-            v = self.edge_cases(v)
+            self.edge_cases(v)
             ro = self.fill_ro()
             sIt[0,1] = self.stop_condition(v, ro)
 
@@ -164,17 +164,17 @@ class Relaxation:
                 sIt[0,1] = self.stop_condition(v, ro)
 
                 integral = np.vstack([integral, np.array([[it, sIt[0,0]]])])
-
+                print(it)
                 if (math.fabs((sIt[0, 0] - sIt[0, 1]) / sIt[0, 0]) < self.TOL):
                     break
-            plt.plot(integral[1:, 0], integral[1:, 1], label=(str)(omega))
+            plt.plot(integral[1:, 0], integral[1:, 1], label="omega="+(str)(omega))
             # print(vOld)
-        plt.title("Integral")
+        plt.title("Integral for local relaxation")
         plt.xlabel("it")
         plt.ylabel("s(it)")
         plt.legend()
         plt.show()
-#Relaxation().global_relaxation()
+Relaxation().global_relaxation()
 Relaxation().local_relaxation()
 
 
