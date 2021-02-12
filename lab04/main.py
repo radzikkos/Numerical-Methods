@@ -2,9 +2,9 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FixedLocator, FormatStrFormatter
+'''Wykresy calek sa malo czytelne z racji tego, ze 
+ za duzo iteracji jest wyswietlanych, ale program skonczyl sie
+ wykonywac po 4h i juz chyba nie jestem gotow na puszczenie go znow'''
 class Relaxation:
     def __init__(self):
         self.epsilon = 1.

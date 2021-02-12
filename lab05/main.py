@@ -46,17 +46,28 @@ class MultiGridRelaxation():
             for j in range(k, self.ny - k + 1, k):
                 V[i,j] = 1/4 * (V[i + k,j] + V[i - k,j] + V[i,j + k] + V[i,j - k])
 
+
     def solve(self):
 
         it = 0
-
+        file = open("integral.dat","w")
+        V = np.zeros((self.nx + 1, self.ny + 1))
+        self.edge_cases(V)
+        sIt = np.zeros((1, 2))
         for step in self.k:
-            sIt = np.zeros((1, 2))
-            V = np.zeros((self.nx + 1, self.ny + 1))
-            self.edge_cases(V)
+            #sIt = np.zeros((1, 2))
+            #V = np.zeros((self.nx + 1, self.ny + 1))
+            #self.edge_cases(V)
             sIt[0,1] = self.stop_condition(V, step)
 
             while True:
-
+                self.discretization(V,step)
+                sIt[0,0] = sIt[0,1]
+                sIt[0,1] = self.stop_condition(V, step)
+                file.write(str(step) + "\t" + str(it) + "\t" + str(sIt[0,1]) +"\n")
+                it += 1
+                print(it)
                 if(fabs( (sIt[0,1]- sIt[0,0]) / sIt[0,0] ) < self.TOL):
                     break
+
+MultiGridRelaxation().solve()
